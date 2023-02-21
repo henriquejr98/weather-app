@@ -1,4 +1,4 @@
-from io import BytesIO
+import io
 import tkinter
 from typing import TypedDict, List
 import requests
@@ -29,6 +29,7 @@ class Forecast( TypedDict ):
     main: CurrentWeather
     dt_txt: str
 
+
 def get_location( config, zip_code, country_code ) -> Location:
     r1 = requests.get( 'http://api.openweathermap.org/geo/1.0/zip', params={
         "zip": f"{zip_code},{country_code}",
@@ -39,7 +40,8 @@ def get_location( config, zip_code, country_code ) -> Location:
 def get_icon( cod_icon ):
     img_url = f'http://openweathermap.org/img/wn/{ cod_icon }@2x.png'
     raw_data = urllib.request.urlopen( img_url ).read()
-    icon = Image.open( BytesIO( raw_data ) )
+    data_stream = io.BytesIO( raw_data )
+    icon = Image.open( data_stream )
     return icon
 
 
@@ -110,12 +112,10 @@ def write_current_weather( app, weather ):
         value = values[i]
         if keys[i] == 'Icon':
             tkinter.Label( label_frame, text= key ).grid( row= i + 1, ipadx= 10, ipady= 10 )
-            tkinter.Label( label_frame, image= ImageTk.PhotoImage( value ) ).grid( column= 1, row= i + 1, ipadx= 10, ipady= 10 )
+            tkinter.Label( label_frame, image= ( ImageTk.PhotoImage( value ) ) ).grid( column= 1, row= i + 1, ipadx= 10, ipady= 10 )
         else:
             tkinter.Label( label_frame, text= key ).grid( row= i + 1, ipadx= 10, ipady= 10 )
             tkinter.Label( label_frame, text= value ).grid( column= 1, row= i + 1, ipadx= 10, ipady= 10 )
-
-
 
 def write_forecasts( app, forecast ):
     label_frame = tkinter.LabelFrame( app, text='Forecast Weather in Rio de Janeiro' )
@@ -131,6 +131,9 @@ def write_forecasts( app, forecast ):
         tkinter.Label( label_frame, text= label_values[i] ).grid( column= 0, row= i + 1, ipadx= 10, ipady= 10 )
 
 
+def create_button( app, text, function ):
+    return tkinter.Button( app, text= text, command= function ).pack( pady= 20 )
+
 if __name__ == '__main__':
     # An aplication to call the current weather in Rio de Janeiro (RJ) - Brazil.
     env_config = dotenv_values(".env") # This will return a dict with our keys in .env.
@@ -145,6 +148,6 @@ if __name__ == '__main__':
     app = create_tkinter( 'Rio de Janeiro Weather - Henrique Silva Costa Júnior' )
     write_date( app )
     write_current_weather( app, weather )
-    write_forecasts( app, forecast )
+    create_button( app, 'Show Forecasts', lambda: write_forecasts( app, forecast ) )
     app.mainloop()
 
